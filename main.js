@@ -4460,7 +4460,8 @@ var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $author$project$Main$CurrentDecision = {$: 'CurrentDecision'};
 var $elm$core$Basics$False = {$: 'False'};
-var $author$project$Main$init = {criteriaList: _List_Nil, currentCriteria: '', currentCriteriaDescription: '', currentCriteriaWeight: '1', currentOption: '', currentOptionDescription: '', currentPage: $author$project$Main$CurrentDecision, decisionTitle: '', nextCriteriaId: 1, nextOptionId: 1, options: _List_Nil, titleLocked: false};
+var $author$project$Main$OverviewTab = {$: 'OverviewTab'};
+var $author$project$Main$init = {criteriaList: _List_Nil, currentCriteria: '', currentCriteriaDescription: '', currentCriteriaWeight: '', currentOption: '', currentOptionDescription: '', currentPage: $author$project$Main$CurrentDecision, currentTab: $author$project$Main$OverviewTab, decisionTitle: '', nextCriteriaId: 1, nextOptionId: 1, options: _List_Nil, titleLocked: false};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -5211,6 +5212,11 @@ var $author$project$Main$update = F2(
 				return _Utils_update(
 					model,
 					{currentPage: page});
+			case 'ChangeTab':
+				var tab = msg.a;
+				return _Utils_update(
+					model,
+					{currentTab: tab});
 			case 'UpdateDecisionTitle':
 				var newTitle = msg.a;
 				return _Utils_update(
@@ -5254,6 +5260,37 @@ var $author$project$Main$update = F2(
 				} else {
 					return model;
 				}
+			case 'UpdateScore':
+				var optionId = msg.a;
+				var criteriaId = msg.b;
+				var scoreValue = msg.c;
+				var _v1 = $elm$core$String$toInt(scoreValue);
+				if (_v1.$ === 'Just') {
+					var newScore = _v1.a;
+					return _Utils_update(
+						model,
+						{
+							options: A2(
+								$elm$core$List$map,
+								function (option) {
+									return _Utils_eq(option.id, optionId) ? _Utils_update(
+										option,
+										{
+											scores: A2(
+												$elm$core$List$map,
+												function (score) {
+													return _Utils_eq(score.criteriaID, criteriaId) ? _Utils_update(
+														score,
+														{value: newScore}) : score;
+												},
+												option.scores)
+										}) : option;
+								},
+								model.options)
+						});
+				} else {
+					return model;
+				}
 			case 'DeleteOption':
 				var optionId = msg.a;
 				return _Utils_update(
@@ -5282,12 +5319,12 @@ var $author$project$Main$update = F2(
 					model,
 					{currentCriteriaWeight: newWeight});
 			case 'AddCriteria':
-				if ($elm$core$String$trim(model.currentCriteria) !== '') {
+				if ($elm$core$String$trim(model.currentCriteria) === '') {
 					return model;
 				} else {
-					var _v1 = $elm$core$String$toInt(model.currentCriteriaWeight);
-					if (_v1.$ === 'Just') {
-						var weight = _v1.a;
+					var _v2 = $elm$core$String$toInt(model.currentCriteriaWeight);
+					if (_v2.$ === 'Just') {
+						var weight = _v2.a;
 						var newCriteria = {description: model.currentCriteriaDescription, id: model.nextCriteriaId, name: model.currentCriteria, weight: weight};
 						var updatedOptions = A2(
 							$elm$core$List$map,
@@ -5308,7 +5345,7 @@ var $author$project$Main$update = F2(
 								criteriaList: A2($elm$core$List$cons, newCriteria, model.criteriaList),
 								currentCriteria: '',
 								currentCriteriaDescription: '',
-								currentCriteriaWeight: '1',
+								currentCriteriaWeight: '',
 								nextCriteriaId: model.nextCriteriaId + 1,
 								options: updatedOptions
 							});
@@ -5341,15 +5378,9 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $author$project$Main$AddCriteria = {$: 'AddCriteria'};
-var $author$project$Main$AddOption = {$: 'AddOption'};
 var $author$project$Main$DeleteCriteria = function (a) {
 	return {$: 'DeleteCriteria', a: a};
 };
-var $author$project$Main$DeleteOption = function (a) {
-	return {$: 'DeleteOption', a: a};
-};
-var $author$project$Main$EditDecisionTitle = {$: 'EditDecisionTitle'};
-var $author$project$Main$SaveDecisionTitle = {$: 'SaveDecisionTitle'};
 var $author$project$Main$UpdateCurrentCriteria = function (a) {
 	return {$: 'UpdateCurrentCriteria', a: a};
 };
@@ -5359,17 +5390,7 @@ var $author$project$Main$UpdateCurrentCriteriaDescription = function (a) {
 var $author$project$Main$UpdateCurrentCriteriaWeight = function (a) {
 	return {$: 'UpdateCurrentCriteriaWeight', a: a};
 };
-var $author$project$Main$UpdateCurrentOption = function (a) {
-	return {$: 'UpdateCurrentOption', a: a};
-};
-var $author$project$Main$UpdateCurrentOptionDescription = function (a) {
-	return {$: 'UpdateCurrentOptionDescription', a: a};
-};
-var $author$project$Main$UpdateDecisionTitle = function (a) {
-	return {$: 'UpdateDecisionTitle', a: a};
-};
 var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -5427,171 +5448,15 @@ var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProp
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $author$project$Main$viewDecisionPage = function (model) {
+var $author$project$Main$viewCriteriaTab = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('content')
+				$elm$html$Html$Attributes$class('decision-content')
 			]),
 		_List_fromArray(
 			[
-				A2(
-				$elm$html$Html$h1,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Decision Helper')
-					])),
-				model.titleLocked ? A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$h2,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text(model.decisionTitle)
-							])),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$EditDecisionTitle)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Edit Decision')
-							]))
-					])) : A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$placeholder('What decision are you making?'),
-								$elm$html$Html$Attributes$value(model.decisionTitle),
-								$elm$html$Html$Events$onInput($author$project$Main$UpdateDecisionTitle)
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Main$SaveDecisionTitle)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Save Decision')
-							]))
-					])),
-				A2(
-				$elm$html$Html$p,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Created date here')
-					])),
-				A2(
-				$elm$html$Html$p,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('No of Criteria here')
-					])),
-				A2(
-				$elm$html$Html$p,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('No of Options here')
-					])),
-				A2(
-				$elm$html$Html$h2,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Option:')
-					])),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$placeholder('Option Name'),
-						$elm$html$Html$Attributes$value(model.currentOption),
-						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentOption)
-					]),
-				_List_Nil),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$placeholder('Option Description (optional)'),
-						$elm$html$Html$Attributes$value(model.currentOptionDescription),
-						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentOptionDescription)
-					]),
-				_List_Nil),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick($author$project$Main$AddOption)
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Add Option')
-					])),
-				A2(
-				$elm$html$Html$h2,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Options:')
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				A2(
-					$elm$core$List$map,
-					function (option) {
-						return A2(
-							$elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$h2,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(option.name)
-										])),
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(option.description)
-										])),
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick(
-											$author$project$Main$DeleteOption(option.id))
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Delete')
-										]))
-								]));
-					},
-					model.options)),
 				A2(
 				$elm$html$Html$h2,
 				_List_Nil,
@@ -5683,6 +5548,815 @@ var $author$project$Main$viewDecisionPage = function (model) {
 								]));
 					},
 					model.criteriaList))
+			]));
+};
+var $author$project$Main$AddOption = {$: 'AddOption'};
+var $author$project$Main$DeleteOption = function (a) {
+	return {$: 'DeleteOption', a: a};
+};
+var $author$project$Main$UpdateCurrentOption = function (a) {
+	return {$: 'UpdateCurrentOption', a: a};
+};
+var $author$project$Main$UpdateCurrentOptionDescription = function (a) {
+	return {$: 'UpdateCurrentOptionDescription', a: a};
+};
+var $author$project$Main$viewOptionsTab = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('decision-content')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Option:')
+					])),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$placeholder('Option Name'),
+						$elm$html$Html$Attributes$value(model.currentOption),
+						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentOption)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$placeholder('Option Description (optional)'),
+						$elm$html$Html$Attributes$value(model.currentOptionDescription),
+						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentOptionDescription)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick($author$project$Main$AddOption)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Add Option')
+					])),
+				A2(
+				$elm$html$Html$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Options:')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				A2(
+					$elm$core$List$map,
+					function (option) {
+						return A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h2,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(option.name)
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(option.description)
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Events$onClick(
+											$author$project$Main$DeleteOption(option.id))
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Delete')
+										]))
+								]));
+					},
+					model.options))
+			]));
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$getCriteriaById = F2(
+	function (criteriaId, criteriaList) {
+		return $elm$core$List$head(
+			A2(
+				$elm$core$List$filter,
+				function (criteria) {
+					return _Utils_eq(criteria.id, criteriaId);
+				},
+				criteriaList));
+	});
+var $author$project$Main$getCriteriaWeight = F2(
+	function (criteriaId, criteriaList) {
+		var _v0 = A2($author$project$Main$getCriteriaById, criteriaId, criteriaList);
+		if (_v0.$ === 'Just') {
+			var criteria = _v0.a;
+			return criteria.weight;
+		} else {
+			return 0;
+		}
+	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $author$project$Main$calculateOptionScore = F2(
+	function (option, criteriaList) {
+		return $elm$core$List$sum(
+			A2(
+				$elm$core$List$map,
+				function (score) {
+					return score.value * A2($author$project$Main$getCriteriaWeight, score.criteriaID, criteriaList);
+				},
+				option.scores));
+	});
+var $author$project$Main$getBestOption = F2(
+	function (options, criteriaList) {
+		if (!options.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var first = options.a;
+			var rest = options.b;
+			return $elm$core$Maybe$Just(
+				A3(
+					$elm$core$List$foldl,
+					F2(
+						function (option, currentBest) {
+							return (_Utils_cmp(
+								A2($author$project$Main$calculateOptionScore, option, criteriaList),
+								A2($author$project$Main$calculateOptionScore, currentBest, criteriaList)) > 0) ? option : currentBest;
+						}),
+					first,
+					rest));
+		}
+	});
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$h3 = _VirtualDom_node('h3');
+var $elm$core$List$isEmpty = function (xs) {
+	if (!xs.b) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $author$project$Main$viewOverviewTab = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('decision-content')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('main-overview')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('criteria-overview')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h2,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Criteria & Weights')
+									])),
+								$elm$core$List$isEmpty(model.criteriaList) ? A2(
+								$elm$html$Html$p,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('empty-state')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('No criteria added yet.')
+									])) : A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								A2(
+									$elm$core$List$map,
+									function (criteria) {
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('criteria-row')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('criteria-info')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$h3,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(criteria.name)
+																])),
+															A2(
+															$elm$html$Html$p,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(criteria.description)
+																]))
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('weight-badge')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															$elm$core$String$fromInt(criteria.weight))
+														]))
+												]));
+									},
+									model.criteriaList))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('options-overview')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h2,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Options')
+									])),
+								$elm$core$List$isEmpty(model.options) ? A2(
+								$elm$html$Html$p,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('empty-state')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('No options added yet.')
+									])) : A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								A2(
+									$elm$core$List$map,
+									function (option) {
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('option-card')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$h3,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text(option.name)
+														])),
+													A2(
+													$elm$html$Html$p,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text(option.description)
+														]))
+												]));
+									},
+									model.options)),
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Scores are calculated using weighted average.')
+									])),
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Score range: 1 (low) - 10 (high)')
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('notes')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h3,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Notes')
+									])),
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Add any notes here')
+									])),
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('secondary-btn')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Edit')
+									]))
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('recommendation-card')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Recommended Choice')
+							])),
+						function () {
+						var _v0 = A2($author$project$Main$getBestOption, model.options, model.criteriaList);
+						if (_v0.$ === 'Just') {
+							var option = _v0.a;
+							return A2(
+								$elm$html$Html$h1,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(option.name)
+									]));
+						} else {
+							return A2(
+								$elm$html$Html$h2,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('No Recommendation Yet')
+									]));
+						}
+					}(),
+						function () {
+						var _v1 = A2($author$project$Main$getBestOption, model.options, model.criteriaList);
+						if (_v1.$ === 'Just') {
+							var option = _v1.a;
+							return A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(option.name + ' scores highest overall based on your criteria and weights')
+									]));
+						} else {
+							return A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('')
+									]));
+						}
+					}()
+					]))
+			]));
+};
+var $author$project$Main$viewProsAndConsTab = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('decision-content')
+			]),
+		_List_Nil);
+};
+var $author$project$Main$viewResultTab = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('decision-content')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h1,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Results')
+					])),
+				function () {
+				var _v0 = A2($author$project$Main$getBestOption, model.options, model.criteriaList);
+				if (_v0.$ === 'Just') {
+					var winner = _v0.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h2,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Winner: ' + winner.name)
+									]))
+							]));
+				} else {
+					return $elm$html$Html$text('');
+				}
+			}(),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				A2(
+					$elm$core$List$map,
+					function (option) {
+						return A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h3,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(option.name)
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											'Score: ' + $elm$core$String$fromInt(
+												A2($author$project$Main$calculateOptionScore, option, model.criteriaList)))
+										]))
+								]));
+					},
+					model.options))
+			]));
+};
+var $author$project$Main$UpdateScore = F3(
+	function (a, b, c) {
+		return {$: 'UpdateScore', a: a, b: b, c: c};
+	});
+var $author$project$Main$getCriteriaName = F2(
+	function (criteriaId, criteriaList) {
+		var _v0 = A2($author$project$Main$getCriteriaById, criteriaId, criteriaList);
+		if (_v0.$ === 'Just') {
+			var criteria = _v0.a;
+			return criteria.name;
+		} else {
+			return 'Unknown Criteria';
+		}
+	});
+var $author$project$Main$viewScoringTab = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('decision-content')
+			]),
+		A2(
+			$elm$core$List$map,
+			function (option) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('option-score-card')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h2,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text(option.name)
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							A2(
+								$elm$core$List$map,
+								function (score) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('score-row')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$p,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text(
+														A2($author$project$Main$getCriteriaName, score.criteriaID, model.criteriaList))
+													])),
+												A2(
+												$elm$html$Html$input,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$value(
+														$elm$core$String$fromInt(score.value)),
+														$elm$html$Html$Events$onInput(
+														function (newValue) {
+															return A3($author$project$Main$UpdateScore, option.id, score.criteriaID, newValue);
+														})
+													]),
+												_List_Nil)
+											]));
+								},
+								option.scores))
+						]));
+			},
+			model.options));
+};
+var $author$project$Main$viewDecisionContent = function (model) {
+	var _v0 = model.currentTab;
+	switch (_v0.$) {
+		case 'OverviewTab':
+			return $author$project$Main$viewOverviewTab(model);
+		case 'CriteriaTab':
+			return $author$project$Main$viewCriteriaTab(model);
+		case 'OptionsTab':
+			return $author$project$Main$viewOptionsTab(model);
+		case 'ProsAndConsTab':
+			return $author$project$Main$viewProsAndConsTab(model);
+		case 'ScoringTab':
+			return $author$project$Main$viewScoringTab(model);
+		default:
+			return $author$project$Main$viewResultTab(model);
+	}
+};
+var $author$project$Main$ChangeTab = function (a) {
+	return {$: 'ChangeTab', a: a};
+};
+var $author$project$Main$CriteriaTab = {$: 'CriteriaTab'};
+var $author$project$Main$EditDecisionTitle = {$: 'EditDecisionTitle'};
+var $author$project$Main$OptionsTab = {$: 'OptionsTab'};
+var $author$project$Main$ProsAndConsTab = {$: 'ProsAndConsTab'};
+var $author$project$Main$ResultTab = {$: 'ResultTab'};
+var $author$project$Main$SaveDecisionTitle = {$: 'SaveDecisionTitle'};
+var $author$project$Main$ScoringTab = {$: 'ScoringTab'};
+var $author$project$Main$UpdateDecisionTitle = function (a) {
+	return {$: 'UpdateDecisionTitle', a: a};
+};
+var $author$project$Main$viewDecisionTabs = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('decision-title-bar')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('decision-title')
+					]),
+				_List_fromArray(
+					[
+						model.titleLocked ? A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h1,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(model.decisionTitle)
+									])),
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('secondary-btn'),
+										$elm$html$Html$Events$onClick($author$project$Main$EditDecisionTitle)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Edit Decision')
+									]))
+							])) : A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$placeholder('What decision are you making?'),
+										$elm$html$Html$Attributes$value(model.decisionTitle),
+										$elm$html$Html$Events$onInput($author$project$Main$UpdateDecisionTitle)
+									]),
+								_List_Nil),
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('secondary-btn'),
+										$elm$html$Html$Events$onClick($author$project$Main$SaveDecisionTitle)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Save Decision')
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('decision-details')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Created date here')
+									])),
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										'Criteria: ' + $elm$core$String$fromInt(
+											$elm$core$List$length(model.criteriaList)))
+									])),
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										'Options: ' + $elm$core$String$fromInt(
+											$elm$core$List$length(model.options)))
+									]))
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('tab-bar')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$ChangeTab($author$project$Main$OverviewTab))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Overview')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$ChangeTab($author$project$Main$CriteriaTab))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Criteria')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$ChangeTab($author$project$Main$OptionsTab))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Options')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$ChangeTab($author$project$Main$ProsAndConsTab))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Pros & Cons')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$ChangeTab($author$project$Main$ScoringTab))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Scoring')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$ChangeTab($author$project$Main$ResultTab))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Result')
+							]))
+					]))
+			]));
+};
+var $author$project$Main$viewDecisionPage = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('content')
+			]),
+		_List_fromArray(
+			[
+				$author$project$Main$viewDecisionTabs(model),
+				$author$project$Main$viewDecisionContent(model)
 			]));
 };
 var $author$project$Main$viewHistoryPage = function (model) {
@@ -5829,8 +6503,7 @@ var $author$project$Main$view = function (model) {
 		_List_fromArray(
 			[
 				$author$project$Main$viewSidebar(model),
-				$author$project$Main$viewContent(model),
-				$author$project$Main$viewDecisionPage(model)
+				$author$project$Main$viewContent(model)
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(

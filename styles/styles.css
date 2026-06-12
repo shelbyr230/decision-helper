@@ -9,10 +9,15 @@
     --camel: #c6974c; /*yellow score text*/
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f5f7fb;
+    color: var(--deep-blue);
 }
 
 h1 {
@@ -23,28 +28,217 @@ h1 {
 .app-container {
     display: flex;
     height: 100vh;
+    background-color: var(--lavender-mist);
 }
 
 .sidebar {
     background-color: var(--deep-blue);
     color: var(--lavender-mist);
-    width: 250px;
+    width: 260px;
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: 24px;
+    border-radius: 16px;
+    margin: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
 
-button {
-    padding: 6px;
-    border-radius: 5px;
+
+.sidebar button {
+    background: transparent;
+    color: var(--lavender-mist);
+    font-size: 16px; 
+    line-height: 16px; 
+    padding: 14px 16px; 
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.newDecisionBtn {
+.sidebar button:hover {
+    background-color: var(--indigo);
+    transform: translateX(3px);
+}
+
+.sidebar button:active {
+    background-color: var(--indigo);
+}
+
+
+.sidebar .newDecisionBtn {
     background-color: var(--majorelle-blue);
     color: var(--lavender-mist);
+    font-weight: 600;
+    margin-bottom: 16px;
 }
 
 .content {
+    border: 1.5px solid #1b203217;
+    border-radius: 16px;
+    margin: 12px;
+    background-color: #f5f3f7;
     flex: 1;
-    padding: 24px;
+    padding: 32px;
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.04),
+        0 8px 20px rgba(0,0,0,0.06);
+}
+
+.decision-content {
+    display: flex;
+    gap: 24px;
+}
+
+.decision-title-bar {
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    border-bottom: 1.5px solid #1b203217;
+}
+
+.decision-title {
+    
+}
+
+.decision-details {
+    display: flex;
+    gap: 24px;
+    color: var(--deep-blue);
+    padding: 5px;
+    font-size: 14px;
+}
+
+.tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.tab-bar button {
+    background: transparent;
+    color: var(--deep-blue);
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-bar button:hover {
+    color: var(--majorelle-blue);
+    border-bottom: 1.5px solid var(--majorelle-blue);
+    
+}
+
+.main-overview {
+    flex: 2;
+}
+
+.empty-state {
+    color: #777;
+    font-style: italic;
+}
+
+.criteria-overview,
+.options-overview,
+.notes {
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    border: 1.5px solid #1b203217;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.criteria-overview {
+    border: 1.5px solid #1b203217;
+    border-radius: 10px;
+    margin: 5px;
+}
+
+.criteria-weights {
+    display: flex;
+
+}
+
+.criteria-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1.5px solid #1b203217;
+}
+
+.options-overview {
+    border: 1.5px solid #1b203217;
+    border-radius: 10px;
+    margin: 5px;
+}
+
+.option-card {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border: 1.5px solid #1b203217;
+    transition: transform 0.2s ease;
+}
+
+.option-card:hover {
+    transform: translateY(-2px);
+}
+
+.weight-badge {
+    background: var(--majorelle-blue);
+    color: var(--lavender-mist);
+    min-width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.notes {
+    background-color: var(--lavender-mist);
+    border: 1.5px solid #1b203217;
+    border-radius: 10px;
+    margin: 5px;
+}
+
+.recommendation-card {
+    flex: 1;
+    border-radius: 20px;
+    padding: 32px;
+    position: sticky;
+    top: 24px;
+    border-top: 5px solid var(--majorelle-blue);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #d8dbe2;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--majorelle-blue);
+    box-shadow: 0 0 0 3px rgba(107,67,217,0.15);
+}
+
+button {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.secondary-btn {
+    background-color: var(--lavender-mist);
+    color: var(--majorelle-blue);
+    border: 1.5px solid var(--majorelle-blue);
+    padding: 10px 14px;
+    border-radius: 8px;
 }

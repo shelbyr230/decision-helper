@@ -3,11 +3,13 @@ module Main exposing (main)
 import Browser
 
 --use div, h1, text
-import Html exposing (Html, div, h1, h2, p, text, input, button)
+import Html exposing (Html, div, h1, h2, h3, p, text, input, button)
 import Html.Attributes exposing (placeholder, value, class)
 import Html.Events exposing (onInput, onClick)
 
 import String
+
+import Html exposing (option)
 
 
 --MAIN
@@ -27,8 +29,17 @@ type Page
     | Templates
     | Settings
 
+type DecisionTab
+    = OverviewTab
+    | CriteriaTab
+    | OptionsTab
+    | ProsAndConsTab
+    | ScoringTab
+    | ResultTab
+
 type alias Model =
     { currentPage : Page
+    , currentTab : DecisionTab
     , decisionTitle : String
     , titleLocked : Bool
     , currentOption : String
@@ -65,6 +76,7 @@ init : Model
 
 init = 
     { currentPage = CurrentDecision
+    , currentTab = OverviewTab
     , decisionTitle = "" 
     , titleLocked = False
     , currentOption = ""
@@ -73,7 +85,7 @@ init =
     , options = []
     , currentCriteria = ""
     , currentCriteriaDescription = ""
-    , currentCriteriaWeight = "1"
+    , currentCriteriaWeight = ""
     , nextCriteriaId = 1
     , criteriaList = []
     }
@@ -82,12 +94,14 @@ init =
 --UPDATE, changes data
 type Msg
     = ChangePage Page
+    | ChangeTab DecisionTab
     | UpdateDecisionTitle String
     | SaveDecisionTitle
     | EditDecisionTitle
     | UpdateCurrentOption String
     | UpdateCurrentOptionDescription String
     | AddOption --User clicked add option button
+    | UpdateScore Int Int String --optionId, criteriaId, value
     | DeleteOption Int
     | UpdateCurrentCriteria String
     | UpdateCurrentCriteriaDescription String
@@ -100,6 +114,8 @@ update msg model =
     case msg of
         ChangePage page ->
             { model | currentPage = page }
+        ChangeTab tab ->
+            { model | currentTab = tab }
         UpdateDecisionTitle newTitle ->
             {model | decisionTitle = newTitle}
         SaveDecisionTitle -> 
@@ -140,6 +156,32 @@ update msg model =
                 }
             else 
                 model
+        UpdateScore optionId criteriaId scoreValue ->
+            case String.toInt scoreValue of
+                Just newScore ->
+                    { model
+                    | options =
+                        List.map
+                            (\option ->
+                                if option.id == optionId then
+                                    { option
+                                        | scores =
+                                            List.map
+                                                (\score ->
+                                                    if score.criteriaID == criteriaId then
+                                                        { score | value = newScore }
+                                                    else
+                                                        score
+                                                )
+                                                option.scores
+                                    }
+                                else
+                                    option
+                            )
+                            model.options
+                    }
+                Nothing ->
+                    model
         DeleteOption optionId ->
             { model
                 | options = 
@@ -154,7 +196,7 @@ update msg model =
         UpdateCurrentCriteriaWeight newWeight ->
             { model | currentCriteriaWeight = newWeight}
         AddCriteria ->
-            if String.trim model.currentCriteria /= "" then
+            if String.trim model.currentCriteria == "" then
                 model
             else
                 case String.toInt model.currentCriteriaWeight of
@@ -185,7 +227,7 @@ update msg model =
                             , options = updatedOptions
                             , currentCriteria = ""
                             , currentCriteriaDescription = ""
-                            , currentCriteriaWeight = "1"
+                            , currentCriteriaWeight = ""
                             , nextCriteriaId = model.nextCriteriaId + 1
                         }
                     Nothing ->
@@ -200,26 +242,72 @@ update msg model =
 
 
 
+--HELPERS
+getCriteriaById : Int -> List Criteria -> Maybe Criteria
+getCriteriaById criteriaId criteriaList =
+    List.head
+        (List.filter
+            (\criteria -> criteria.id == criteriaId)
+            criteriaList
+        )
+
+getCriteriaName : Int -> List Criteria -> String
+getCriteriaName criteriaId criteriaList =
+    case getCriteriaById criteriaId criteriaList of
+        Just criteria ->
+            criteria.name
+        Nothing ->
+            "Unknown Criteria"
+
+getCriteriaWeight : Int -> List Criteria -> Int
+getCriteriaWeight criteriaId criteriaList =
+    case getCriteriaById criteriaId criteriaList of
+        Just criteria ->
+            criteria.weight
+        Nothing ->
+            0
+
+calculateOptionScore : Option -> List Criteria -> Int
+calculateOptionScore option criteriaList =
+    List.sum
+        (List.map
+            (\score ->
+                score.value
+                    * getCriteriaWeight score.criteriaID criteriaList
+            )
+            option.scores
+        )
+
+getBestOption : List Option -> List Criteria -> Maybe Option
+getBestOption options criteriaList =
+    case options of
+        [] ->
+            Nothing
+        first :: rest ->
+            Just
+                (List.foldl
+                    (\option currentBest ->
+                        if calculateOptionScore option criteriaList
+                            > calculateOptionScore currentBest criteriaList then
+                            
+                            option
+                        
+                        else
+                            currentBest
+                    )
+                    first
+                    rest
+                )
+
+
+
 --VIEW, turns data into HTML
 view : Model -> Html Msg
 view model =
     div [ class "app-container" ]
         [ viewSidebar model
         , viewContent model
-        , viewDecisionPage model
         ]
-
-viewContent : Model -> Html Msg
-viewContent model =
-    case model.currentPage of
-        CurrentDecision ->
-            viewDecisionPage model
-        History ->
-            viewHistoryPage model
-        Templates ->
-            viewTemplatesPage model
-        Settings ->
-            viewSettingsPage model
 
 viewSidebar : Model -> Html Msg
 viewSidebar model =
@@ -241,29 +329,161 @@ viewSidebar model =
             [ text "Settings (Coming Soon)"]
         ]
 
+viewContent : Model -> Html Msg
+viewContent model =
+    case model.currentPage of
+        CurrentDecision ->
+            viewDecisionPage model
+        History ->
+            viewHistoryPage model
+        Templates ->
+            viewTemplatesPage model
+        Settings ->
+            viewSettingsPage model
+
+
 viewDecisionPage : Model -> Html Msg
-viewDecisionPage model =
+viewDecisionPage model = 
     div [ class "content" ]
-        [ h1 [] [ text "Decision Helper" ]
-        , if model.titleLocked then 
-            div []
-                [ h2 [] [ text model.decisionTitle ]
-                , button [onClick EditDecisionTitle] [text "Edit Decision"]
+        [ viewDecisionTabs model
+        , viewDecisionContent model]
+
+viewDecisionTabs : Model -> Html Msg
+viewDecisionTabs model =
+    div [ class "decision-title-bar"] [
+        div [ class "decision-title" ]
+            [ if model.titleLocked then 
+                div []
+                    [ h1 [] [ text model.decisionTitle ]
+                    , button 
+                        [ class "secondary-btn" 
+                        , onClick EditDecisionTitle] 
+                        [text "Edit Decision"]
+                    ]
+            else
+                div []
+                    [ input 
+                        [ placeholder "What decision are you making?"
+                        , value model.decisionTitle
+                        , onInput UpdateDecisionTitle] []
+                    , button
+                        [ class "secondary-btn"
+                        , onClick SaveDecisionTitle]
+                        [text "Save Decision"]
+                    ]
+            , div [ class "decision-details" ] 
+                [ p [] [text "Created date here"]
+                , p [] [text ("Criteria: " ++ String.fromInt (List.length model.criteriaList))]
+                , p [] [text ("Options: " ++ String.fromInt (List.length model.options))]
                 ]
-        else
-            div []
-                [ input 
-                    [ placeholder "What decision are you making?"
-                    , value model.decisionTitle
-                    , onInput UpdateDecisionTitle] []
-                , button
-                    [ onClick SaveDecisionTitle]
-                    [text "Save Decision"]
+            ]
+        , div [ class "tab-bar" ]
+            [ button 
+                [ onClick (ChangeTab OverviewTab) ]
+                [ text "Overview" ] 
+            , button 
+                [ onClick (ChangeTab CriteriaTab) ]
+                [ text "Criteria" ] 
+            , button 
+                [ onClick (ChangeTab OptionsTab) ]
+                [ text "Options" ] 
+            , button 
+                [ onClick (ChangeTab ProsAndConsTab) ]
+                [ text "Pros & Cons" ] 
+            , button
+                [ onClick (ChangeTab ScoringTab) ]
+                [ text "Scoring" ]
+            , button 
+                [ onClick (ChangeTab ResultTab) ]
+                [ text "Result" ] 
+            ]
+    ]
+
+viewDecisionContent : Model -> Html Msg
+viewDecisionContent model =
+    case model.currentTab of
+        OverviewTab ->
+            viewOverviewTab model
+        CriteriaTab ->
+            viewCriteriaTab model
+        OptionsTab ->
+            viewOptionsTab model
+        ProsAndConsTab ->
+            viewProsAndConsTab model
+        ScoringTab ->
+            viewScoringTab model
+        ResultTab ->
+            viewResultTab model
+
+viewOverviewTab : Model -> Html Msg
+viewOverviewTab model =
+    div [ class "decision-content" ]
+        [ div [ class "main-overview" ] 
+            [ div [ class "criteria-overview"] 
+                [ h2 [] [ text "Criteria & Weights" ]
+                , if List.isEmpty model.criteriaList then
+                    p [ class "empty-state" ]
+                        [ text "No criteria added yet." ]
+                else
+                    div []
+                        (List.map 
+                            (\criteria -> 
+                                div [ class "criteria-row" ]
+                                    [ div [ class "criteria-info" ] 
+                                        [h3 [] [ text criteria.name]
+                                        , p [] [ text criteria.description]
+                                        ]
+                                    , div [ class "weight-badge"]
+                                        [ text (String.fromInt criteria.weight) ]
+                                    ]
+                            ) 
+                            model.criteriaList
+                        )
                 ]
-        , p [] [text "Created date here"]
-        , p [] [text "No of Criteria here"]
-        , p [] [text "No of Options here"]
-        , h2 [] [text "Option:"]
+            , div [ class "options-overview"] 
+                [ h2 [] [ text "Options" ]
+                , if List.isEmpty model.options then
+                    p [ class "empty-state" ]
+                        [ text "No options added yet." ]
+                else
+                    div [] 
+                        (List.map 
+                            (\option ->
+                                div [ class "option-card" ]
+                                    [ h3 [] [ text option.name ]
+                                    , p [] [ text option.description ]
+                                    ]
+                            )  
+                            model.options
+                        )
+                , p [] [ text "Scores are calculated using weighted average." ]
+                , p [] [ text "Score range: 1 (low) - 10 (high)" ]
+                ]
+            , div [ class "notes" ] 
+                [ h3 [] [ text "Notes" ]
+                , p [] [ text "Add any notes here" ]
+                , button [ class "secondary-btn" ] [ text "Edit" ]
+                ]
+            ]
+        , div [ class "recommendation-card" ] 
+            [ h3 [] [ text "Recommended Choice" ]
+            , case getBestOption model.options model.criteriaList of
+                Just option ->
+                    h1 [] [ text option.name ]
+                Nothing ->
+                    h2 [] [ text "No Recommendation Yet" ]            
+            , case getBestOption model.options model.criteriaList of
+                Just option ->
+                    p [] [ text (option.name ++ " scores highest overall based on your criteria and weights") ]
+                Nothing ->
+                    p [] [ text "" ]
+            ]
+        ]
+
+viewOptionsTab : Model -> Html Msg
+viewOptionsTab model =
+    div [ class "decision-content"] 
+        [ h2 [] [text "Option:"]
         , input 
             [ placeholder "Option Name"
             , value model.currentOption
@@ -287,7 +507,12 @@ viewDecisionPage model =
                 )  
                 model.options
             ) --transform each item in options list to a paragraph
-        , h2 [] [text "Criteria:"]
+    ]
+
+viewCriteriaTab : Model -> Html Msg
+viewCriteriaTab model =
+    div [ class "decision-content"] 
+        [ h2 [] [text "Criteria:"]
         , input 
             [ placeholder "Criteria Name"
             , value model.currentCriteria
@@ -307,7 +532,7 @@ viewDecisionPage model =
                     div []
                         [ h2 [] [ text criteria.name]
                         , p [] [ text criteria.description]
-                        , p [] [ text (String.fromInt(criteria.weight))]
+                        , p [] [ text (String.fromInt criteria.weight)]
                         , button 
                             [ onClick (DeleteCriteria criteria.id)] 
                             [text "Delete"]
@@ -315,7 +540,83 @@ viewDecisionPage model =
                 ) 
                 model.criteriaList
             )
+    ]
+
+viewProsAndConsTab : Model -> Html Msg
+viewProsAndConsTab model =
+    div [ class "decision-content"] []
+
+viewScoringTab : Model -> Html Msg
+viewScoringTab model =
+    div [ class "decision-content" ]
+        (List.map
+            (\option ->
+                div [ class "option-score-card" ]
+                    [ h2 [] [ text option.name ]
+
+                    , div []
+                        (List.map
+                            (\score ->
+                                div [ class "score-row" ]
+                                    [ p []
+                                        [ text
+                                            (getCriteriaName
+                                                score.criteriaID
+                                                model.criteriaList
+                                            )
+                                        ]
+
+                                    , input
+                                        [ value (String.fromInt score.value)
+                                        , onInput
+                                            (\newValue ->
+                                                UpdateScore
+                                                    option.id
+                                                    score.criteriaID
+                                                    newValue
+                                            )
+                                        ]
+                                        []
+                                    ]
+                            )
+                            option.scores
+                        )
+                    ]
+            )
+            model.options
+        )
+viewResultTab : Model -> Html Msg
+viewResultTab model =
+    div [ class "decision-content"] 
+        [ h1 [] [ text "Results" ]
+        , case getBestOption model.options model.criteriaList of
+            Just winner ->
+                div []
+                    [ h2 [] [ text ("Winner: " ++ winner.name) ]
+                    ]
+            Nothing ->
+                text ""
+        , div[]
+            (List.map
+                (\option ->
+                    div []
+                        [ h3 [] [text option.name ]
+                        , p [] [ text 
+                            ("Score: " 
+                                ++ String.fromInt 
+                                    (calculateOptionScore 
+                                        option 
+                                        model.criteriaList
+                                    )
+                            )
+                        ]
+                        ]
+                ) 
+                model.options
+            )
         ]
+
+
 
 viewHistoryPage : Model -> Html Msg
 viewHistoryPage model =
