@@ -4,7 +4,7 @@ import Browser
 
 --use div, h1, text
 import Html exposing (Html, div, h1, h2, p, text, input, button)
-import Html.Attributes exposing (placeholder, value)
+import Html.Attributes exposing (placeholder, value, class)
 import Html.Events exposing (onInput, onClick)
 
 import String
@@ -21,8 +21,15 @@ main =
 
 
 --MODEL, data changes with updates
+type Page
+    = CurrentDecision
+    | History
+    | Templates
+    | Settings
+
 type alias Model =
-    { decisionTitle : String
+    { currentPage : Page
+    , decisionTitle : String
     , titleLocked : Bool
     , currentOption : String
     , currentOptionDescription : String
@@ -57,7 +64,8 @@ type alias Criteria =
 init : Model
 
 init = 
-    { decisionTitle = "" 
+    { currentPage = CurrentDecision
+    , decisionTitle = "" 
     , titleLocked = False
     , currentOption = ""
     , currentOptionDescription = ""
@@ -73,7 +81,8 @@ init =
 
 --UPDATE, changes data
 type Msg
-    = UpdateDecisionTitle String
+    = ChangePage Page
+    | UpdateDecisionTitle String
     | SaveDecisionTitle
     | EditDecisionTitle
     | UpdateCurrentOption String
@@ -89,6 +98,8 @@ type Msg
 update : Msg -> Model -> Model
 update msg model = 
     case msg of
+        ChangePage page ->
+            { model | currentPage = page }
         UpdateDecisionTitle newTitle ->
             {model | decisionTitle = newTitle}
         SaveDecisionTitle -> 
@@ -192,7 +203,47 @@ update msg model =
 --VIEW, turns data into HTML
 view : Model -> Html Msg
 view model =
-    div []
+    div [ class "app-container" ]
+        [ viewSidebar model
+        , viewContent model
+        , viewDecisionPage model
+        ]
+
+viewContent : Model -> Html Msg
+viewContent model =
+    case model.currentPage of
+        CurrentDecision ->
+            viewDecisionPage model
+        History ->
+            viewHistoryPage model
+        Templates ->
+            viewTemplatesPage model
+        Settings ->
+            viewSettingsPage model
+
+viewSidebar : Model -> Html Msg
+viewSidebar model =
+    div [ class "sidebar" ]
+        [ h2 [] [ text "DecideWise"]
+        , p [] [ text "Better decisions, less doubt."]
+        , button [] [ text "+ New Decision"]
+        , button 
+            [ onClick (ChangePage CurrentDecision) ]
+            [ text "Current Decision"]
+        , button 
+            [ onClick (ChangePage History) ]
+            [ text "History (Coming Soon)"]
+        , button 
+            [ onClick (ChangePage Templates) ]
+            [ text "Templates (Coming Soon)"]
+        , button 
+            [ onClick (ChangePage Settings) ]
+            [ text "Settings (Coming Soon)"]
+        ]
+
+viewDecisionPage : Model -> Html Msg
+viewDecisionPage model =
+    div [ class "content" ]
         [ h1 [] [ text "Decision Helper" ]
         , if model.titleLocked then 
             div []
@@ -265,3 +316,15 @@ view model =
                 model.criteriaList
             )
         ]
+
+viewHistoryPage : Model -> Html Msg
+viewHistoryPage model =
+    div [] [ text "history page" ]
+
+viewTemplatesPage : Model -> Html Msg
+viewTemplatesPage model =
+    div [] [ text "templates page" ]
+
+viewSettingsPage : Model -> Html Msg
+viewSettingsPage model =
+    div [] [ text "settings page" ]

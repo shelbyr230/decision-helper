@@ -4458,8 +4458,9 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
+var $author$project$Main$CurrentDecision = {$: 'CurrentDecision'};
 var $elm$core$Basics$False = {$: 'False'};
-var $author$project$Main$init = {criteriaList: _List_Nil, currentCriteria: '', currentCriteriaDescription: '', currentOption: '', currentOptionDescription: '', decisionTitle: '', nextCriteriaId: 1, nextOptionId: 1, options: _List_Nil, titleLocked: false};
+var $author$project$Main$init = {criteriaList: _List_Nil, currentCriteria: '', currentCriteriaDescription: '', currentCriteriaWeight: '1', currentOption: '', currentOptionDescription: '', currentPage: $author$project$Main$CurrentDecision, decisionTitle: '', nextCriteriaId: 1, nextOptionId: 1, options: _List_Nil, titleLocked: false};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -5205,6 +5206,11 @@ var $elm$core$String$trim = _String_trim;
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'ChangePage':
+				var page = msg.a;
+				return _Utils_update(
+					model,
+					{currentPage: page});
 			case 'UpdateDecisionTitle':
 				var newTitle = msg.a;
 				return _Utils_update(
@@ -5230,7 +5236,13 @@ var $author$project$Main$update = F2(
 					{currentOptionDescription: newOptionDescription});
 			case 'AddOption':
 				if ($elm$core$String$trim(model.currentOption) !== '') {
-					var newOption = {description: model.currentOptionDescription, id: model.nextOptionId, name: model.currentOption};
+					var scoresForNewOption = A2(
+						$elm$core$List$map,
+						function (criteria) {
+							return {criteriaID: criteria.id, value: 0};
+						},
+						model.criteriaList);
+					var newOption = {description: model.currentOptionDescription, id: model.nextOptionId, name: model.currentOption, scores: scoresForNewOption};
 					return _Utils_update(
 						model,
 						{
@@ -5264,19 +5276,45 @@ var $author$project$Main$update = F2(
 				return _Utils_update(
 					model,
 					{currentCriteriaDescription: newCriteriaDescription});
+			case 'UpdateCurrentCriteriaWeight':
+				var newWeight = msg.a;
+				return _Utils_update(
+					model,
+					{currentCriteriaWeight: newWeight});
 			case 'AddCriteria':
 				if ($elm$core$String$trim(model.currentCriteria) !== '') {
-					var newCriteria = {description: model.currentCriteriaDescription, id: model.nextCriteriaId, name: model.currentCriteria};
-					return _Utils_update(
-						model,
-						{
-							criteriaList: A2($elm$core$List$cons, newCriteria, model.criteriaList),
-							currentCriteria: '',
-							currentCriteriaDescription: '',
-							nextCriteriaId: model.nextCriteriaId + 1
-						});
-				} else {
 					return model;
+				} else {
+					var _v1 = $elm$core$String$toInt(model.currentCriteriaWeight);
+					if (_v1.$ === 'Just') {
+						var weight = _v1.a;
+						var newCriteria = {description: model.currentCriteriaDescription, id: model.nextCriteriaId, name: model.currentCriteria, weight: weight};
+						var updatedOptions = A2(
+							$elm$core$List$map,
+							function (option) {
+								return _Utils_update(
+									option,
+									{
+										scores: A2(
+											$elm$core$List$cons,
+											{criteriaID: newCriteria.id, value: 0},
+											option.scores)
+									});
+							},
+							model.options);
+						return _Utils_update(
+							model,
+							{
+								criteriaList: A2($elm$core$List$cons, newCriteria, model.criteriaList),
+								currentCriteria: '',
+								currentCriteriaDescription: '',
+								currentCriteriaWeight: '1',
+								nextCriteriaId: model.nextCriteriaId + 1,
+								options: updatedOptions
+							});
+					} else {
+						return model;
+					}
 				}
 			default:
 				var criteriaId = msg.a;
@@ -5292,6 +5330,16 @@ var $author$project$Main$update = F2(
 					});
 		}
 	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$html$Html$div = _VirtualDom_node('div');
 var $author$project$Main$AddCriteria = {$: 'AddCriteria'};
 var $author$project$Main$AddOption = {$: 'AddOption'};
 var $author$project$Main$DeleteCriteria = function (a) {
@@ -5308,6 +5356,9 @@ var $author$project$Main$UpdateCurrentCriteria = function (a) {
 var $author$project$Main$UpdateCurrentCriteriaDescription = function (a) {
 	return {$: 'UpdateCurrentCriteriaDescription', a: a};
 };
+var $author$project$Main$UpdateCurrentCriteriaWeight = function (a) {
+	return {$: 'UpdateCurrentCriteriaWeight', a: a};
+};
 var $author$project$Main$UpdateCurrentOption = function (a) {
 	return {$: 'UpdateCurrentOption', a: a};
 };
@@ -5318,7 +5369,6 @@ var $author$project$Main$UpdateDecisionTitle = function (a) {
 	return {$: 'UpdateDecisionTitle', a: a};
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$input = _VirtualDom_node('input');
@@ -5373,22 +5423,17 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
 var $elm$html$Html$p = _VirtualDom_node('p');
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $author$project$Main$view = function (model) {
+var $author$project$Main$viewDecisionPage = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('content')
+			]),
 		_List_fromArray(
 			[
 				A2(
@@ -5573,6 +5618,15 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_Nil),
 				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$placeholder('Criteria Weight'),
+						$elm$html$Html$Attributes$value(model.currentCriteriaWeight),
+						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentCriteriaWeight)
+					]),
+				_List_Nil),
+				A2(
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
@@ -5602,13 +5656,18 @@ var $author$project$Main$view = function (model) {
 										])),
 									A2(
 									$elm$html$Html$p,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$placeholder('Enter a description (optional)')
-										]),
+									_List_Nil,
 									_List_fromArray(
 										[
 											$elm$html$Html$text(criteria.description)
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											$elm$core$String$fromInt(criteria.weight))
 										])),
 									A2(
 									$elm$html$Html$button,
@@ -5624,6 +5683,142 @@ var $author$project$Main$view = function (model) {
 								]));
 					},
 					model.criteriaList))
+			]));
+};
+var $author$project$Main$viewHistoryPage = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text('history page')
+			]));
+};
+var $author$project$Main$viewSettingsPage = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text('settings page')
+			]));
+};
+var $author$project$Main$viewTemplatesPage = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text('templates page')
+			]));
+};
+var $author$project$Main$viewContent = function (model) {
+	var _v0 = model.currentPage;
+	switch (_v0.$) {
+		case 'CurrentDecision':
+			return $author$project$Main$viewDecisionPage(model);
+		case 'History':
+			return $author$project$Main$viewHistoryPage(model);
+		case 'Templates':
+			return $author$project$Main$viewTemplatesPage(model);
+		default:
+			return $author$project$Main$viewSettingsPage(model);
+	}
+};
+var $author$project$Main$ChangePage = function (a) {
+	return {$: 'ChangePage', a: a};
+};
+var $author$project$Main$History = {$: 'History'};
+var $author$project$Main$Settings = {$: 'Settings'};
+var $author$project$Main$Templates = {$: 'Templates'};
+var $author$project$Main$viewSidebar = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('sidebar')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('DecideWise')
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Better decisions, less doubt.')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('+ New Decision')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						$author$project$Main$ChangePage($author$project$Main$CurrentDecision))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Current Decision')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						$author$project$Main$ChangePage($author$project$Main$History))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('History (Coming Soon)')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						$author$project$Main$ChangePage($author$project$Main$Templates))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Templates (Coming Soon)')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						$author$project$Main$ChangePage($author$project$Main$Settings))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Settings (Coming Soon)')
+					]))
+			]));
+};
+var $author$project$Main$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('app-container')
+			]),
+		_List_fromArray(
+			[
+				$author$project$Main$viewSidebar(model),
+				$author$project$Main$viewContent(model),
+				$author$project$Main$viewDecisionPage(model)
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
