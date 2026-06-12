@@ -226,7 +226,7 @@ viewSidebar model =
     div [ class "sidebar" ]
         [ h2 [] [ text "DecideWise"]
         , p [] [ text "Better decisions, less doubt."]
-        , button [] [ text "+ New Decision"]
+        , button [ class "newDecisionBtn"] [ text "+ New Decision"]
         , button 
             [ onClick (ChangePage CurrentDecision) ]
             [ text "Current Decision"]
@@ -319,12 +319,12 @@ viewDecisionPage model =
 
 viewHistoryPage : Model -> Html Msg
 viewHistoryPage model =
-    div [] [ text "history page" ]
+    div [ class "content" ] [ text "history page" ]
 
 viewTemplatesPage : Model -> Html Msg
 viewTemplatesPage model =
-    div [] [ text "templates page" ]
+    div [ class "content" ] [ text "templates page" ]
 
 viewSettingsPage : Model -> Html Msg
 viewSettingsPage model =
-    div [] [ text "settings page" ]
+    div [ class "content"]  [ text "settings page" ]

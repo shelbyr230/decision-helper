@@ -1,3 +1,14 @@
+:root {
+    --deep-blue: #1b2032; /*menu, text*/
+    --indigo: #322D60; /*menu highlight*/
+    --majorelle-blue: #6b43d9; /*buttons, scales, main page highlight, choice text*/
+    --lavender-mist: #f6f2fa; /*subtle highlights, notes section*/
+    --honeydew: #e4f8e7; /*green score circle*/
+    --sea-green: #378a43; /*green score text*/
+    --cornsilk: #fdf4db; /*yellow score circle*/
+    --camel: #c6974c; /*yellow score text*/
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -7,4 +18,33 @@ body {
 h1 {
     text-align: center;
     margin-top: 3rem;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    background-color: var(--deep-blue);
+    color: var(--lavender-mist);
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+}
+
+button {
+    padding: 6px;
+    border-radius: 5px;
+}
+
+.newDecisionBtn {
+    background-color: var(--majorelle-blue);
+    color: var(--lavender-mist);
+}
+
+.content {
+    flex: 1;
+    padding: 24px;
 }

@@ -5688,7 +5688,10 @@ var $author$project$Main$viewDecisionPage = function (model) {
 var $author$project$Main$viewHistoryPage = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('content')
+			]),
 		_List_fromArray(
 			[
 				$elm$html$Html$text('history page')
@@ -5697,7 +5700,10 @@ var $author$project$Main$viewHistoryPage = function (model) {
 var $author$project$Main$viewSettingsPage = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('content')
+			]),
 		_List_fromArray(
 			[
 				$elm$html$Html$text('settings page')
@@ -5706,7 +5712,10 @@ var $author$project$Main$viewSettingsPage = function (model) {
 var $author$project$Main$viewTemplatesPage = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('content')
+			]),
 		_List_fromArray(
 			[
 				$elm$html$Html$text('templates page')
@@ -5756,7 +5765,10 @@ var $author$project$Main$viewSidebar = function (model) {
 					])),
 				A2(
 				$elm$html$Html$button,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('newDecisionBtn')
+					]),
 				_List_fromArray(
 					[
 						$elm$html$Html$text('+ New Decision')
