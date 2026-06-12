@@ -4459,7 +4459,7 @@ var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$Basics$False = {$: 'False'};
-var $author$project$Main$init = {criteriaList: _List_Nil, currentCriteria: '', currentOption: '', decisionTitle: '', nextCriteriaId: 1, nextOptionId: 1, options: _List_Nil, titleLocked: false};
+var $author$project$Main$init = {criteriaList: _List_Nil, currentCriteria: '', currentCriteriaDescription: '', currentOption: '', currentOptionDescription: '', decisionTitle: '', nextCriteriaId: 1, nextOptionId: 1, options: _List_Nil, titleLocked: false};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -5219,17 +5219,23 @@ var $author$project$Main$update = F2(
 					model,
 					{titleLocked: false});
 			case 'UpdateCurrentOption':
-				var newOption = msg.a;
+				var newOptionName = msg.a;
 				return _Utils_update(
 					model,
-					{currentOption: newOption});
+					{currentOption: newOptionName});
+			case 'UpdateCurrentOptionDescription':
+				var newOptionDescription = msg.a;
+				return _Utils_update(
+					model,
+					{currentOptionDescription: newOptionDescription});
 			case 'AddOption':
 				if ($elm$core$String$trim(model.currentOption) !== '') {
-					var newOption = {id: model.nextOptionId, name: model.currentOption};
+					var newOption = {description: model.currentOptionDescription, id: model.nextOptionId, name: model.currentOption};
 					return _Utils_update(
 						model,
 						{
 							currentOption: '',
+							currentOptionDescription: '',
 							nextOptionId: model.nextOptionId + 1,
 							options: A2($elm$core$List$cons, newOption, model.options)
 						});
@@ -5253,14 +5259,20 @@ var $author$project$Main$update = F2(
 				return _Utils_update(
 					model,
 					{currentCriteria: newCriteria});
+			case 'UpdateCurrentCriteriaDescription':
+				var newCriteriaDescription = msg.a;
+				return _Utils_update(
+					model,
+					{currentCriteriaDescription: newCriteriaDescription});
 			case 'AddCriteria':
 				if ($elm$core$String$trim(model.currentCriteria) !== '') {
-					var newCriteria = {id: model.nextCriteriaId, name: model.currentCriteria};
+					var newCriteria = {description: model.currentCriteriaDescription, id: model.nextCriteriaId, name: model.currentCriteria};
 					return _Utils_update(
 						model,
 						{
 							criteriaList: A2($elm$core$List$cons, newCriteria, model.criteriaList),
 							currentCriteria: '',
+							currentCriteriaDescription: '',
 							nextCriteriaId: model.nextCriteriaId + 1
 						});
 				} else {
@@ -5293,8 +5305,14 @@ var $author$project$Main$SaveDecisionTitle = {$: 'SaveDecisionTitle'};
 var $author$project$Main$UpdateCurrentCriteria = function (a) {
 	return {$: 'UpdateCurrentCriteria', a: a};
 };
+var $author$project$Main$UpdateCurrentCriteriaDescription = function (a) {
+	return {$: 'UpdateCurrentCriteriaDescription', a: a};
+};
 var $author$project$Main$UpdateCurrentOption = function (a) {
 	return {$: 'UpdateCurrentOption', a: a};
+};
+var $author$project$Main$UpdateCurrentOptionDescription = function (a) {
+	return {$: 'UpdateCurrentOptionDescription', a: a};
 };
 var $author$project$Main$UpdateDecisionTitle = function (a) {
 	return {$: 'UpdateDecisionTitle', a: a};
@@ -5355,8 +5373,6 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
 var $elm$html$Html$p = _VirtualDom_node('p');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5365,6 +5381,9 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			key,
 			$elm$json$Json$Encode$string(string));
 	});
+var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$view = function (model) {
 	return A2(
@@ -5378,13 +5397,6 @@ var $author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text('Decision Helper')
-					])),
-				A2(
-				$elm$html$Html$h2,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('What decision are you making?')
 					])),
 				model.titleLocked ? A2(
 				$elm$html$Html$div,
@@ -5417,6 +5429,7 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$input,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$placeholder('What decision are you making?'),
 								$elm$html$Html$Attributes$value(model.decisionTitle),
 								$elm$html$Html$Events$onInput($author$project$Main$UpdateDecisionTitle)
 							]),
@@ -5433,6 +5446,27 @@ var $author$project$Main$view = function (model) {
 							]))
 					])),
 				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Created date here')
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('No of Criteria here')
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('No of Options here')
+					])),
+				A2(
 				$elm$html$Html$h2,
 				_List_Nil,
 				_List_fromArray(
@@ -5443,8 +5477,18 @@ var $author$project$Main$view = function (model) {
 				$elm$html$Html$input,
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$placeholder('Option Name'),
 						$elm$html$Html$Attributes$value(model.currentOption),
 						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentOption)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$placeholder('Option Description (optional)'),
+						$elm$html$Html$Attributes$value(model.currentOptionDescription),
+						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentOptionDescription)
 					]),
 				_List_Nil),
 				A2(
@@ -5476,11 +5520,18 @@ var $author$project$Main$view = function (model) {
 							_List_fromArray(
 								[
 									A2(
-									$elm$html$Html$p,
+									$elm$html$Html$h2,
 									_List_Nil,
 									_List_fromArray(
 										[
 											$elm$html$Html$text(option.name)
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(option.description)
 										])),
 									A2(
 									$elm$html$Html$button,
@@ -5507,8 +5558,18 @@ var $author$project$Main$view = function (model) {
 				$elm$html$Html$input,
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$placeholder('Criteria Name'),
 						$elm$html$Html$Attributes$value(model.currentCriteria),
 						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentCriteria)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$placeholder('Criteria Description (optional)'),
+						$elm$html$Html$Attributes$value(model.currentCriteriaDescription),
+						$elm$html$Html$Events$onInput($author$project$Main$UpdateCurrentCriteriaDescription)
 					]),
 				_List_Nil),
 				A2(
@@ -5533,11 +5594,21 @@ var $author$project$Main$view = function (model) {
 							_List_fromArray(
 								[
 									A2(
-									$elm$html$Html$p,
+									$elm$html$Html$h2,
 									_List_Nil,
 									_List_fromArray(
 										[
 											$elm$html$Html$text(criteria.name)
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$placeholder('Enter a description (optional)')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(criteria.description)
 										])),
 									A2(
 									$elm$html$Html$button,

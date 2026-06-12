@@ -4,7 +4,7 @@ import Browser
 
 --use div, h1, text
 import Html exposing (Html, div, h1, h2, p, text, input, button)
-import Html.Attributes exposing (value)
+import Html.Attributes exposing (placeholder, value)
 import Html.Events exposing (onInput, onClick)
 
 import String
@@ -25,21 +25,33 @@ type alias Model =
     { decisionTitle : String
     , titleLocked : Bool
     , currentOption : String
+    , currentOptionDescription : String
     , nextOptionId : Int
     , options : List Option
     , currentCriteria : String
+    , currentCriteriaDescription : String
+    , currentCriteriaWeight : String
     , nextCriteriaId : Int
     , criteriaList : List Criteria
     }
 
 type alias Option =
-    { name : String
-    , id : Int
+    { id : Int
+    , name : String
+    , description : String
+    , scores : List Score
+    }
+
+type alias Score = 
+    { criteriaID : Int
+    , value : Int
     }
 
 type alias Criteria = 
-    { name : String
-    , id : Int
+    { id : Int
+    , name : String
+    , description : String
+    , weight : Int
     }
 
 init : Model
@@ -48,9 +60,12 @@ init =
     { decisionTitle = "" 
     , titleLocked = False
     , currentOption = ""
+    , currentOptionDescription = ""
     , nextOptionId = 1
     , options = []
     , currentCriteria = ""
+    , currentCriteriaDescription = ""
+    , currentCriteriaWeight = "1"
     , nextCriteriaId = 1
     , criteriaList = []
     }
@@ -62,9 +77,12 @@ type Msg
     | SaveDecisionTitle
     | EditDecisionTitle
     | UpdateCurrentOption String
+    | UpdateCurrentOptionDescription String
     | AddOption --User clicked add option button
     | DeleteOption Int
     | UpdateCurrentCriteria String
+    | UpdateCurrentCriteriaDescription String
+    | UpdateCurrentCriteriaWeight String
     | AddCriteria --User clicks add criteria button
     | DeleteCriteria Int
 
@@ -80,21 +98,35 @@ update msg model =
                 model
         EditDecisionTitle ->
             { model | titleLocked = False }
-        UpdateCurrentOption newOption ->
-            {model | currentOption = newOption}
+        UpdateCurrentOption newOptionName -> 
+            { model | currentOption = newOptionName }
+        UpdateCurrentOptionDescription newOptionDescription ->
+            { model | currentOptionDescription = newOptionDescription}
         AddOption ->
             if String.trim model.currentOption /= "" then
                 let
+                    scoresForNewOption = 
+                        List.map
+                            (\criteria ->
+                                { criteriaID = criteria.id
+                                , value = 0
+                                }
+                            )
+                            model.criteriaList
+
                     newOption = 
                         { id = model.nextOptionId
                         , name = model.currentOption
+                        , description = model.currentOptionDescription
+                        , scores = scoresForNewOption
                         }
                 in
-                {model
+                { model
                     | options = newOption :: model.options
                     , currentOption = ""
+                    , currentOptionDescription = ""
                     , nextOptionId = model.nextOptionId + 1
-                    }
+                }
             else 
                 model
         DeleteOption optionId ->
@@ -105,21 +137,48 @@ update msg model =
                         model.options
             }
         UpdateCurrentCriteria newCriteria ->
-            {model | currentCriteria = newCriteria}
+            { model | currentCriteria = newCriteria}
+        UpdateCurrentCriteriaDescription newCriteriaDescription ->
+            { model | currentCriteriaDescription = newCriteriaDescription}
+        UpdateCurrentCriteriaWeight newWeight ->
+            { model | currentCriteriaWeight = newWeight}
         AddCriteria ->
             if String.trim model.currentCriteria /= "" then
-                let 
-                    newCriteria =
-                        { id = model.nextCriteriaId
-                        , name = model.currentCriteria
+                model
+            else
+                case String.toInt model.currentCriteriaWeight of
+                    Just weight ->
+                        let 
+                            newCriteria =
+                                { id = model.nextCriteriaId
+                                , name = model.currentCriteria
+                                , description = model.currentCriteriaDescription
+                                , weight = weight
+                                }
+
+                            updatedOptions = 
+                                List.map
+                                    (\option ->
+                                        { option
+                                            | scores =
+                                                { criteriaID = newCriteria.id
+                                                , value = 0
+                                                }
+                                                :: option.scores
+                                        }
+                                    )
+                                    model.options
+                        in
+                        {model 
+                            | criteriaList = newCriteria :: model.criteriaList
+                            , options = updatedOptions
+                            , currentCriteria = ""
+                            , currentCriteriaDescription = ""
+                            , currentCriteriaWeight = "1"
+                            , nextCriteriaId = model.nextCriteriaId + 1
                         }
-                in
-                {model 
-                    | criteriaList = newCriteria :: model.criteriaList
-                    , currentCriteria = ""
-                    , nextCriteriaId = model.nextCriteriaId + 1
-                }
-            else model
+                    Nothing ->
+                        model
         DeleteCriteria criteriaId ->
             {model
                 | criteriaList =
@@ -135,7 +194,6 @@ view : Model -> Html Msg
 view model =
     div []
         [ h1 [] [ text "Decision Helper" ]
-        , h2 [] [ text "What decision are you making?"]
         , if model.titleLocked then 
             div []
                 [ h2 [] [ text model.decisionTitle ]
@@ -144,23 +202,33 @@ view model =
         else
             div []
                 [ input 
-                    [value model.decisionTitle
+                    [ placeholder "What decision are you making?"
+                    , value model.decisionTitle
                     , onInput UpdateDecisionTitle] []
                 , button
                     [ onClick SaveDecisionTitle]
                     [text "Save Decision"]
                 ]
+        , p [] [text "Created date here"]
+        , p [] [text "No of Criteria here"]
+        , p [] [text "No of Options here"]
         , h2 [] [text "Option:"]
         , input 
-            [value model.currentOption
+            [ placeholder "Option Name"
+            , value model.currentOption
             , onInput UpdateCurrentOption] []
+        , input 
+            [ placeholder "Option Description (optional)"
+            , value model.currentOptionDescription
+            , onInput UpdateCurrentOptionDescription] []
         , button [ onClick AddOption ] [ text "Add Option"]
         , h2 [] [text "Options:"]
         , div [] 
             (List.map 
                 (\option ->
                     div []
-                        [ p [] [ text option.name ]
+                        [ h2 [] [ text option.name ]
+                        , p [] [ text option.description ]
                         , button 
                             [ onClick (DeleteOption option.id)] 
                             [ text "Delete" ]
@@ -170,14 +238,25 @@ view model =
             ) --transform each item in options list to a paragraph
         , h2 [] [text "Criteria:"]
         , input 
-            [value model.currentCriteria
+            [ placeholder "Criteria Name"
+            , value model.currentCriteria
             , onInput UpdateCurrentCriteria] []
+        , input 
+            [ placeholder "Criteria Description (optional)"
+            , value model.currentCriteriaDescription
+            , onInput UpdateCurrentCriteriaDescription] []
+        , input
+            [ placeholder "Criteria Weight"
+            , value model.currentCriteriaWeight
+            , onInput UpdateCurrentCriteriaWeight] []
         , button [ onClick AddCriteria ] [text "Add Criteria"]
         , div []
             (List.map 
                 (\criteria -> 
                     div []
-                        [ p [] [ text criteria.name]
+                        [ h2 [] [ text criteria.name]
+                        , p [] [ text criteria.description]
+                        , p [] [ text (String.fromInt(criteria.weight))]
                         , button 
                             [ onClick (DeleteCriteria criteria.id)] 
                             [text "Delete"]
